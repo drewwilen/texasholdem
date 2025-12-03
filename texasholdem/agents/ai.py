@@ -6,17 +6,15 @@ AI agents are included in this module:
 import json
 import os
 from typing import Tuple, Optional
+from dotenv import load_dotenv
+load_dotenv()
 
 from texasholdem.game.game import TexasHoldEm
 from texasholdem.game.action_type import ActionType
 from texasholdem.game.player_state import PlayerState
 from texasholdem.agents.player_context import create_player_context
-
-try:
-    from openai import OpenAI
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
+from openai import OpenAI
+import google.generativeai as genai
 
 def openai_agent(
     game: TexasHoldEm,
@@ -49,11 +47,6 @@ def openai_agent(
           >>> game.start_hand()
           >>> action, total = openai_agent(game, api_key="your-api-key")
       """
-      if not OPENAI_AVAILABLE:
-          raise ImportError(
-              "openai package is required for openai_agent. "
-              "Install it with: pip install openai"
-          )
       
       # Get API key
       if api_key is None:
@@ -164,3 +157,112 @@ def openai_agent(
           if isinstance(e, ValueError):
               raise
           raise ValueError(f"Error calling OpenAI API: {e}")
+
+def gemini_agent(
+    game: TexasHoldEm,
+    api_key: Optional[str] = None,
+    model: str = "gemini-2.5-flash",
+    temperature: float = 0,
+  ) -> Tuple[ActionType, Optional[int]]:
+      """
+      An agent that uses Google Gemini to make decisions based on the game context.
+
+      This mirrors openai_agent but uses Gemini instead.
+      """
+      # Get API key
+      if api_key is None:
+          api_key = os.getenv("GEMINI_API_KEY")
+          if api_key is None:
+              raise ValueError(
+                  "Gemini API key not provided. Pass api_key or set GEMINI_API_KEY env var."
+              )
+
+      genai.configure(api_key=api_key)
+
+      # Create context dictionary
+      context = create_player_context(game)
+      context_dict = context.to_dict()
+
+      # Raise info text
+      if context_dict["raise_range"]:
+          raise_range_info = (
+              f"- The raise total must be between "
+              f"{context_dict['raise_range']['min']} "
+              f"and {context_dict['raise_range']['max']}"
+          )
+      else:
+          raise_range_info = "- RAISE is not available in this situation"
+
+      # Prompt
+      prompt = f"""You are playing Texas Hold'em poker. Here is the current game state:
+
+  {json.dumps(context_dict, indent=2)}
+
+  You must choose one of the available actions: {', '.join(context_dict['available_actions'])}.
+
+  Rules:
+  - If you choose RAISE, you must provide a "total" amount (the total amount to raise to)
+  {raise_range_info}
+  - For CALL, CHECK, or FOLD, set total=null
+  - You have {context_dict['chips']} chips
+  - You need to call {context_dict['chips_to_call']} chips
+  - The pot is {context_dict['total_pot_size']} chips
+
+  Respond ONLY with a JSON object:
+  {{"action": "ACTION_NAME", "total": null}}
+  or if raising:
+  {{"action": "RAISE", "total": <number>}}
+
+  Choose the best action based on your hand, the board, pot odds, and situation.
+  """
+
+      # Call Gemini
+      model_obj = genai.GenerativeModel(model)
+      response = model_obj.generate_content(
+          prompt,
+          generation_config=genai.types.GenerationConfig(
+              temperature=temperature,
+              response_mime_type="application/json"
+          )
+      )
+
+      try:
+          response_text = response.text
+          response_json = json.loads(response_text)
+      except Exception as e:
+          raise ValueError(f"Could not parse Gemini response as JSON: {e}")
+
+      # Extract fields
+      action_str = response_json.get("action", "").upper()
+      total = response_json.get("total")
+
+      # Convert to ActionType
+      try:
+          action = ActionType[action_str]
+      except KeyError:
+          raise ValueError(
+              f"Invalid action '{action_str}' from Gemini. "
+              f"Valid actions: {[a.name for a in context.available_actions]}"
+          )
+
+      # Validate availability
+      if action not in context.available_actions:
+          raise ValueError(
+              f"Action '{action_str}' is not available. "
+              f"Available: {[a.name for a in context.available_actions]}"
+          )
+
+      # Validate total if RAISE
+      if action == ActionType.RAISE:
+          if total is None:
+              raise ValueError("RAISE requires a 'total' value")
+          if context.raise_range and (
+              total < context.raise_range.start or total >= context.raise_range.stop
+          ):
+              raise ValueError(
+                  f"Raise total {total} is out of range. "
+                  f"Valid: {context.raise_range.start} to {context.raise_range.stop - 1}"
+              )
+          return action, total
+
+      return action, None
