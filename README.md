@@ -10,6 +10,7 @@
 ```
 OPENAI_API_KEY=your-openai-key
 GEMINI_API_KEY=your-gemini-key
+ANTHROPIC_API_KEY=your-anthropic-key
 ```
 5. Run the project `python main.py`
 
