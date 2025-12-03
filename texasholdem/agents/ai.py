@@ -167,7 +167,27 @@ def gemini_agent(
       """
       An agent that uses Google Gemini to make decisions based on the game context.
 
-      This mirrors openai_agent but uses Gemini instead.
+      This agent creates a PlayerContext, converts it to a dictionary, sends it to
+      Gemini with instructions to return a valid poker action, and parses the response.
+      
+      Arguments:
+          game (TexasHoldEm): The TexasHoldEm game
+          api_key (str, optional): OpenAI API key. If None, uses OPENAI_API_KEY env var.
+          model (str): OpenAI model to use, default "gpt-3.5-turbo" (cheapest option)
+          temperature (float): Temperature for the model, default 0.7
+      
+      Returns:
+          Tuple[ActionType, Optional[int]]: An action tuple (action_type, total)
+      
+      Raises:
+          ImportError: If openai package is not installed
+          ValueError: If API key is not provided and not in environment
+          ValueError: If OpenAI response cannot be parsed
+      
+      Example:
+          >>> game = TexasHoldEm(buyin=500, big_blind=5, small_blind=2)
+          >>> game.start_hand()
+          >>> action, total = openai_agent(game, api_key="your-api-key")
       """
       # Get API key
       if api_key is None:
@@ -213,7 +233,7 @@ def gemini_agent(
   or if raising:
   {{"action": "RAISE", "total": <number>}}
 
-  Choose the best action based on your hand, the board, pot odds, and situation.
+  Choose the best action based on your hand, the board, pot odds, and game situation.
   """
 
       # Call Gemini
