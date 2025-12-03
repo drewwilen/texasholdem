@@ -8,7 +8,7 @@ Set API key: export OPENAI_API_KEY="your-key-here"
 
 import os
 from texasholdem import TexasHoldEm
-from texasholdem.agents.basic import openai_agent
+from texasholdem.agents.ai import openai_agent
 
 
 def main():
