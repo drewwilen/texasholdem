@@ -1,4 +1,19 @@
-# texasholdem
+# 4160 Project
+
+## Gameplay Set Up:
+1. Clone the repository
+2. Set up virtual environment:
+  - `python3 -m venv venv`
+  - `source venv/bin/activate`
+3. Install dependencies: `pip install -r requirements.txt`
+4. Create a ```.env``` file with:
+```
+OPENAI_API_KEY=your-openai-key
+GEMINI_API_KEY=your-gemini-key
+```
+5. Run the project `python main.py`
+
+# texasholdem (original repo)
 ![Pytest Status](https://github.com/SirRender00/texasholdem/actions/workflows/pytest.yml/badge.svg)
 [![codecov](https://codecov.io/github/SirRender00/texasholdem/branch/main/graph/badge.svg?token=1PH1NHTGXP)](https://codecov.io/github/SirRender00/texasholdem)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://raw.githubusercontent.com/SirRender00/texasholdem/main/LICENSE)
@@ -171,3 +186,4 @@ assert rank_to_string(927) == "Flush, King High"
 ### GUIs
 The GUI package currently comes with a text-based GUI to play games from the command line. Coming later
 will be web-app based GUIs.
+
