@@ -15,11 +15,13 @@ from texasholdem.game.player_state import PlayerState
 from texasholdem.agents.player_context import create_player_context
 from openai import OpenAI
 import google.generativeai as genai
+from anthropic import Anthropic
+
 
 def openai_agent(
     game: TexasHoldEm,
     api_key: Optional[str] = None,
-    model: str = "gpt-3.5-turbo",
+    model: str = "gpt-4o-mini",
     temperature: float = 0,
   ) -> Tuple[ActionType, Optional[int]]:
       """
@@ -286,3 +288,154 @@ def gemini_agent(
           return action, total
 
       return action, None
+
+def claude_agent(
+    game: TexasHoldEm,
+    api_key: Optional[str] = None,
+    model: str = "claude-3-5-haiku-latest",
+    temperature: float = 0,
+  ) -> Tuple[ActionType, Optional[int]]:
+      """
+      An agent that uses Anthropic Claude to make decisions based on the game context.
+
+      This agent creates a PlayerContext, converts it to a dictionary, sends it to
+      Claude with instructions to return a valid poker action, and parses the response.
+      
+      Arguments:
+          game (TexasHoldEm): The TexasHoldEm game
+          api_key (str, optional): OpenAI API key. If None, uses OPENAI_API_KEY env var.
+          model (str): OpenAI model to use, default "gpt-3.5-turbo" (cheapest option)
+          temperature (float): Temperature for the model, default 0.7
+      
+      Returns:
+          Tuple[ActionType, Optional[int]]: An action tuple (action_type, total)
+      
+      Raises:
+          ImportError: If openai package is not installed
+          ValueError: If API key is not provided and not in environment
+          ValueError: If OpenAI response cannot be parsed
+      
+      Example:
+          >>> game = TexasHoldEm(buyin=500, big_blind=5, small_blind=2)
+          >>> game.start_hand()
+          >>> action, total = openai_agent(game, api_key="your-api-key")
+      """
+
+      # API key
+      if api_key is None:
+          api_key = os.getenv("ANTHROPIC_API_KEY")
+          if api_key is None:
+              raise ValueError(
+                  "Anthropic API key not provided. Either pass api_key argument "
+                  "or set ANTHROPIC_API_KEY environment variable."
+              )
+
+      # Create context dictionary
+      context = create_player_context(game)
+      context_dict = context.to_dict()
+
+      # Raise range info
+      if context_dict['raise_range']:
+          raise_range_info = (
+              f"- The raise total must be between "
+              f"{context_dict['raise_range']['min']} and {context_dict['raise_range']['max']}"
+          )
+      else:
+          raise_range_info = "- RAISE is not available in this situation"
+
+      # *** IDENTICAL PROMPT TO GPT VERSION ***
+      prompt = f"""You are playing Texas Hold'em poker. Here is the current game state:
+
+    {json.dumps(context_dict, indent=2)}
+
+    You must choose one of the available actions: {', '.join(context_dict['available_actions'])}.
+
+    Rules:
+    - If you choose RAISE, you must provide a "total" amount (the total amount to raise to)
+    {raise_range_info}
+    - For other actions (CALL, CHECK, FOLD), do not provide a total value (set it to null)
+    - You have {context_dict['chips']} chips
+    - You need to call {context_dict['chips_to_call']} chips to stay in
+    - The pot is {context_dict['total_pot_size']} chips
+
+    Respond with a JSON object in this exact format:
+    {{"action": "ACTION_NAME", "total": null}}
+
+    For RAISE actions, use:
+    {{"action": "RAISE", "total": <number>}}
+
+    For other actions, use:
+    {{"action": "ACTION_NAME", "total": null}}
+
+    Choose the best action based on your hand, the board, pot odds, and game situation."""
+
+      # Claude call
+      client = Anthropic(api_key=api_key)
+
+      try:
+          response = client.messages.create(
+              model=model,
+              max_tokens=200,
+              temperature=temperature,
+              system="You are a poker player making decisions in Texas Hold'em. Always respond with valid JSON containing 'action' and 'total' fields.",
+              messages=[
+                  {
+                      "role": "user",
+                      "content": prompt +
+                      "\n\nREPEAT: Output ONLY raw JSON, no codeblocks, no text. "
+                      "Example valid output:\n"
+                      '{ "action": "CALL", "total": null }'
+                  }
+              ]
+          )
+
+          # Claude returns a list of content blocks
+          response_text = response.content[0].text.strip()
+
+          # Parse JSON
+          response_json = json.loads(response_text)
+
+          action_str = response_json.get("action", "").upper()
+          total = response_json.get("total")
+
+          # Convert to ActionType enum
+          try:
+              action = ActionType[action_str]
+          except KeyError:
+              raise ValueError(
+                  f"Invalid action '{action_str}' from Claude. "
+                  f"Valid actions: {[a.name for a in context.available_actions]}"
+              )
+
+          # Validate available action
+          if action not in context.available_actions:
+              raise ValueError(
+                  f"Action '{action_str}' is not available. "
+                  f"Available actions: {[a.name for a in context.available_actions]}"
+              )
+
+          # Validate raise totals
+          if action == ActionType.RAISE:
+              if total is None:
+                  raise ValueError("RAISE action requires a 'total' value")
+
+              if context.raise_range and (
+                  total < context.raise_range.start or total >= context.raise_range.stop
+              ):
+                  raise ValueError(
+                      f"Raise total {total} is out of range. "
+                      f"Valid range: {context.raise_range.start} to {context.raise_range.stop - 1}"
+                  )
+
+              return action, total
+
+          else:
+              return action, None
+
+      except json.JSONDecodeError as e:
+          raise ValueError(f"Failed to parse Claude response as JSON: {e}")
+
+      except Exception as e:
+          if isinstance(e, ValueError):
+              raise
+          raise ValueError(f"Error calling Anthropic API: {e}")
