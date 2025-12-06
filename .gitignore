@@ -2,7 +2,6 @@
 ./docs/_build
 
 # texas history
-*.pgn
 !tests/pgns/*.pgn
 !tests/pgns/*/*.pgn
 !docs/pgns/*.pgn

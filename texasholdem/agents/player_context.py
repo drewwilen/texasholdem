@@ -52,9 +52,14 @@ class PlayerContext:
         Convert the context to a dictionary for easy serialization.
         Useful for passing to LLMs or logging.
         """
+        RANK_ORDER = "23456789TJQKA"
+        rank_value = {r: i for i, r in enumerate(RANK_ORDER)}
+        sorted_cards = sorted(self.hand, key=lambda c: rank_value[str(c)[0]], reverse=True)
+        card_strings = [str(card) for card in sorted_cards]
+
         return {
             "player_id": self.player_id,
-            "hand": [str(card) for card in self.hand],
+            "hand": card_strings,
             "chips": self.chips,
             "chips_to_call": self.chips_to_call,
             "hand_phase": self.hand_phase.name,

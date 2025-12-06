@@ -137,8 +137,7 @@ class Card(int):
             str: The human-readable string representing this card.
 
         """
-        # return Card.STR_RANKS[self.rank] + Card.INT_SUIT_TO_CHAR_SUIT[self.suit]
-        return Card.INT_SUIT_TO_CHAR_SUIT[self.suit] + Card.STR_RANKS[self.rank] # NOTE: CHANGED ORDER
+        return Card.STR_RANKS[self.rank] + Card.INT_SUIT_TO_CHAR_SUIT[self.suit]
 
     def __repr__(self) -> str:
         return f'Card("{str(self)}")'
