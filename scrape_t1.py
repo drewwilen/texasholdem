@@ -75,7 +75,7 @@ def main():
             "player2_net": net2,
         })
 
-    with open("test1_1.csv", "w", newline="") as f:
+    with open("test1_2.csv", "w", newline="") as f:
         writer = csv.DictWriter(
             f,
             ["game_index","winner","player0_start","player1_start","player2_start",
