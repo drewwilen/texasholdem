@@ -1,0 +1,23 @@
+PREHAND
+Big Blind: 2
+Small Blind: 1
+Player Chips: 10000,10000
+Player Cards: [9s 2d],[4s Kh]
+
+PREFLOP
+New Cards: []
+1. (0,RAISE,6);(1,RAISE,10)
+2. (0,RAISE,18);(1,RAISE,34)
+3. (0,RAISE,100);(1,RAISE,166)
+4. (0,RAISE,332);(1,RAISE,498)
+5. (0,RAISE,664);(1,RAISE,830)
+6. (0,RAISE,996);(1,RAISE,1162)
+7. (0,RAISE,1494);(1,RAISE,1826)
+8. (0,RAISE,2490);(1,RAISE,3154)
+9. (0,RAISE,3818);(1,RAISE,4482)
+10. (0,RAISE,5810);(1,RAISE,10000)
+11. (0,CALL)
+
+SETTLE
+New Cards: [9d,2s,Tc,5s,5c]
+Winners: (Pot 0,20000,3055,[0])
