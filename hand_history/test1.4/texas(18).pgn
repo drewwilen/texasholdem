@@ -1,0 +1,27 @@
+PREHAND
+Big Blind: 2
+Small Blind: 1
+Player Chips: 999647,1000140,1000213
+Player Cards: [Qd 4d],[8s 8d],[Qc 5s]
+
+PREFLOP
+New Cards: []
+1. (0,FOLD);(1,CALL);(2,CHECK)
+
+FLOP
+New Cards: [2s,Qh,8h]
+1. (1,RAISE,6);(2,RAISE,18)
+2. (1,CALL)
+
+TURN
+New Cards: [9s]
+1. (1,RAISE,40);(2,RAISE,160)
+2. (1,CALL)
+
+RIVER
+New Cards: [4c]
+1. (1,RAISE,360);(2,CALL)
+
+SETTLE
+New Cards: []
+Winners: (Pot 0,1080,2029,[1])

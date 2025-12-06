@@ -22,5 +22,5 @@ while True:
         else:
             game.take_action(*agent1(game))
 
-    path = game.export_history('./hand_history/test2.oc/texas.pgn')
+    path = game.export_history('./hand_history/test3.tight/texas.pgn')
     hand_index += 1

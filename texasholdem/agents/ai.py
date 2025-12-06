@@ -93,7 +93,7 @@ def openai_agent(
   For other actions, use:
   {{"action": "ACTION_NAME", "total": null}}
 
-  Choose the best action based on your hand, the board, pot odds, and game situation."""
+  Make a good decision as a tight player based on the game situation."""
 
       # Call OpenAI
       client = OpenAI(api_key=api_key)
@@ -104,7 +104,7 @@ def openai_agent(
               messages=[
                   {
                       "role": "system",
-                      "content": "You are a poker player making decisions in Texas Hold'em. Always respond with valid JSON containing 'action' and 'total' fields."
+                      "content": "You are a tight poker player making decisions in Texas Hold'em. Always respond with valid JSON containing 'action' and 'total' fields."
                   },
                   {
                       "role": "user",
@@ -367,7 +367,7 @@ def claude_agent(
     For other actions, use:
     {{"action": "ACTION_NAME", "total": null}}
 
-    Choose the best action based on your hand, the board, pot odds, and game situation."""
+    Make a good decision as a tight player based on the game situation."""
 
       # Claude call
       client = Anthropic(api_key=api_key)
@@ -377,7 +377,7 @@ def claude_agent(
               model=model,
               max_tokens=200,
               temperature=temperature,
-              system="You are a poker player making decisions in Texas Hold'em. Always respond with valid JSON containing 'action' and 'total' fields.",
+              system="You are a tight poker player making decisions in Texas Hold'em. Always respond with valid JSON containing 'action' and 'total' fields.",
               messages=[
                   {
                       "role": "user",
