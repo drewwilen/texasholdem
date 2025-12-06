@@ -100,8 +100,8 @@ def parse_pgn_file(pgn_path, game_index):
     }
 
 def main():
-    pgn_directory = './hand_history/test2.oc'
-    output_file = 'test2_oc.csv'
+    pgn_directory = './hand_history/test3.tight'
+    output_file = 'test3_tight.csv'
     
     # Get all PGN files in order
     pgn_files = get_pgn_files(pgn_directory)

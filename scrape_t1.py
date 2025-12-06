@@ -38,7 +38,7 @@ def rotate_right(chips, shift):
     return chips[-shift:] + chips[:-shift]
 
 def main():
-    paths = sorted(glob.glob("hand_history/test1.3/texas*.pgn"), key=extract_file_index)
+    paths = sorted(glob.glob("hand_history/test1.1/texas*.pgn"), key=extract_file_index)
     hands = []
     game_index = 0
 
@@ -84,7 +84,7 @@ def main():
             "player2_net": net2,
         })
 
-    with open("test1_3.csv", "w", newline="") as f:
+    with open("test1_1.csv", "w", newline="") as f:
         writer = csv.DictWriter(
             f,
             ["game_index","winner","player0_start","player1_start","player2_start",
