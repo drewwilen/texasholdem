@@ -15,4 +15,4 @@ while game.is_game_running():
       else:
         game.take_action(*openai_agent(game))
 
-    path = game.export_history('./hand_history/test1.2/texas.pgn') 
+    path = game.export_history('./hand_history/test1.3/texas.pgn') 

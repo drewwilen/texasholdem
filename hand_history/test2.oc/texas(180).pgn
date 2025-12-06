@@ -1,0 +1,26 @@
+PREHAND
+Big Blind: 2
+Small Blind: 1
+Player Chips: 10000,10000
+Player Cards: [3d Qh],[As Kc]
+
+PREFLOP
+New Cards: []
+1. (0,CALL);(1,RAISE,4)
+2. (0,CALL)
+
+FLOP
+New Cards: [8d,9s,5c]
+1. (1,RAISE,10);(0,CALL)
+
+TURN
+New Cards: [7c]
+1. (1,RAISE,30);(0,CALL)
+
+RIVER
+New Cards: [5h]
+1. (1,RAISE,100);(0,CALL)
+
+SETTLE
+New Cards: []
+Winners: (Pot 0,288,5309,[1])

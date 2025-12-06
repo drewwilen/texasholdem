@@ -29,7 +29,7 @@ def rotate_right(chips, shift):
     return chips[-shift:] + chips[:-shift]
 
 def main():
-    paths = sorted(glob.glob("hand_history/test1.1/texas*.pgn"), key=extract_file_index)
+    paths = sorted(glob.glob("hand_history/test1.2/texas*.pgn"), key=extract_file_index)
     hands = []
     game_index = 0
 
