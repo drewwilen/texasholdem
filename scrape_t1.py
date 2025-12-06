@@ -11,7 +11,16 @@ def extract_winner(line):
     if not m:
         return None
     x = m.group(1).strip()
-    return None if x == "" else int(x)
+    if x == "":
+        return None
+    # Handle multiple winners (tie) - split by comma and strip spaces
+    winners = [int(w.strip()) for w in x.split(",")]
+    if len(winners) == 1:
+        return winners[0]
+    elif len(winners) > 1:
+        return None  # Tie - multiple winners
+    else:
+        return None
 
 def extract_starting_chips(line):
     m = PLAYER_CHIPS_PATTERN.search(line)
