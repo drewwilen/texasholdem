@@ -109,6 +109,7 @@ def create_player_context(game: TexasHoldEm, player_id: Optional[int] = None) ->
     available_actions = available_moves.action_types
     raise_range = available_moves.raise_range if available_moves.raise_range else None
     
+    hand=game.get_hand(player_id)
     # Create context
     context = PlayerContext(
         player_id=player_id,

@@ -16,14 +16,10 @@ def extract_winner(line: str):
     inner = m.group(1).strip()
     if inner == "":
         return None
-    # assume single winner index like [0] or [2]
     return int(inner)
 
 def extract_starting_chips(line: str):
-    """
-    Extract starting chip counts from a 'Player Chips:' line.
-    Returns a list of ints, one per player.
-    """
+    """Extract starting chip counts from a 'Player Chips:' line."""
     m = PLAYER_CHIPS_PATTERN.search(line)
     if not m:
         return None
@@ -31,27 +27,19 @@ def extract_starting_chips(line: str):
     return [int(x.strip()) for x in nums.split(",") if x.strip() != ""]
 
 def extract_file_index(name: str) -> int:
-    """
-    Sort files like:
-    texas.pgn    -> 0
-    texas(1).pgn -> 1
-    texas(5).pgn -> 5
-    """
+    """Sort files logically by game number."""
     base = os.path.basename(name)
     m = re.match(r"texas(?:\((\d+)\))?\.pgn$", base)
     if not m:
         return 999999
-    if m.group(1) is None:
-        return 0
-    return int(m.group(1))
+    return int(m.group(1)) if m.group(1) else 0
 
 def main():
     paths = sorted(
-        glob.glob(os.path.join("hand_history", "texas*.pgn")),
+        glob.glob(os.path.join("hand_history/test1.1", "texas*.pgn")),
         key=extract_file_index,
     )
 
-    # First pass: collect game_number, winner, and starting_chips for each hand
     hands = []
     game_number = 0
 
@@ -70,14 +58,13 @@ def main():
                     winner = extract_winner(line)
 
         if starting_chips is None:
-            # If no starting chips line found, skip this hand
             continue
 
         hands.append(
             {
                 "game_number": game_number,
                 "winner": winner,
-                "starting_chips": starting_chips,
+                "starting_chips": starting_chips,   # <-- NEW
             }
         )
         game_number += 1
@@ -86,30 +73,29 @@ def main():
         print("No hands found.")
         return
 
-    # Assume same number of players across hands
     num_players = len(hands[0]["starting_chips"])
 
-    # Second pass: compute per-hand net profit using game i and game i+1
     rows = []
     for i, hand in enumerate(hands):
-        # Default: last game gets blank profits
         profits = [None] * num_players
 
         if i < len(hands) - 1:
             cur_chips = hand["starting_chips"]
             next_chips = hands[i + 1]["starting_chips"]
 
-            # safety: if something weird happens with lengths, truncate to min
             n = min(len(cur_chips), len(next_chips), num_players)
             profits = [next_chips[j] - cur_chips[j] for j in range(n)]
-            # if n < num_players, leave remaining as None
 
         row = {
             "game_number": hand["game_number"],
             "winner": hand["winner"],
         }
 
-        # Add dynamic columns: player0_net, player1_net, ...
+        # ---- NEW: Add starting chip columns
+        for p in range(num_players):
+            row[f"player{p}_start"] = hand["starting_chips"][p]
+
+        # ---- Existing: Net profit columns
         for p in range(num_players):
             key = f"player{p}_net"
             val = profits[p] if p < len(profits) else None
@@ -117,12 +103,13 @@ def main():
 
         rows.append(row)
 
-    # Build header dynamically
-    fieldnames = ["game_number", "winner"] + [
-        f"player{p}_net" for p in range(num_players)
-    ]
+    # ---- NEW: CSV header includes start + net columns
+    fieldnames = (
+        ["game_number", "winner"]
+        + [f"player{p}_start" for p in range(num_players)]   # <-- NEW
+        + [f"player{p}_net" for p in range(num_players)]
+    )
 
-    # Write CSV
     with open("games_summary.csv", "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -130,7 +117,6 @@ def main():
 
     print("Wrote games_summary.csv with", len(rows), "games.")
     print("Players:", num_players)
-    print("Note: last game has blank net columns by design.")
 
 if __name__ == "__main__":
     main()
