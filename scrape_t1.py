@@ -11,7 +11,16 @@ def extract_winner(line):
     if not m:
         return None
     x = m.group(1).strip()
-    return None if x == "" else int(x)
+    if x == "":
+        return None
+    # Handle multiple winners (tie) - split by comma and strip spaces
+    winners = [int(w.strip()) for w in x.split(",")]
+    if len(winners) == 1:
+        return winners[0]
+    elif len(winners) > 1:
+        return None  # Tie - multiple winners
+    else:
+        return None
 
 def extract_starting_chips(line):
     m = PLAYER_CHIPS_PATTERN.search(line)
@@ -29,7 +38,7 @@ def rotate_right(chips, shift):
     return chips[-shift:] + chips[:-shift]
 
 def main():
-    paths = sorted(glob.glob("hand_history/test1.1/texas*.pgn"), key=extract_file_index)
+    paths = sorted(glob.glob("hand_history/test1.2/texas*.pgn"), key=extract_file_index)
     hands = []
     game_index = 0
 
